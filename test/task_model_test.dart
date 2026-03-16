@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('TaskModel serialization and deserialization', () {
     final now = DateTime.parse('2026-03-16T10:30:00.000Z');
+    final updated = DateTime.parse('2026-03-17T08:15:00.000Z');
 
     final task = TaskModel(
       id: 'task-1',
@@ -11,6 +12,7 @@ void main() {
       title: 'Prepare interview assignment',
       isCompleted: false,
       createdAt: now,
+      updatedAt: updated,
     );
 
     final map = task.toMap();
@@ -21,5 +23,6 @@ void main() {
     expect(restored.title, task.title);
     expect(restored.isCompleted, task.isCompleted);
     expect(restored.createdAt?.toUtc(), now.toUtc());
+    expect(restored.updatedAt?.toUtc(), updated.toUtc());
   });
 }

@@ -14,7 +14,21 @@ flutter pub get
 
 ## Run the App
 
-Use runtime defines for Supabase:
+1. Create a local env file from the template:
+
+```bash
+cp .env.example .env
+```
+
+2. Fill in `.env` with your real Supabase credentials.
+
+3. Run the app using the env file:
+
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+Fallback (direct runtime defines):
 
 ```bash
 flutter run \

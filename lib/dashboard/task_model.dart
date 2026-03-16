@@ -5,6 +5,7 @@ class TaskModel {
     required this.title,
     required this.isCompleted,
     this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -12,6 +13,7 @@ class TaskModel {
   final String title;
   final bool isCompleted;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   TaskModel copyWith({
     String? id,
@@ -19,6 +21,7 @@ class TaskModel {
     String? title,
     bool? isCompleted,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -26,6 +29,7 @@ class TaskModel {
       title: title ?? this.title,
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -38,6 +42,9 @@ class TaskModel {
       createdAt: map['created_at'] == null
           ? null
           : DateTime.tryParse(map['created_at'] as String),
+      updatedAt: map['updated_at'] == null
+          ? null
+          : DateTime.tryParse(map['updated_at'] as String),
     );
   }
 
@@ -48,6 +55,7 @@ class TaskModel {
       'title': title,
       'is_completed': isCompleted,
       'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

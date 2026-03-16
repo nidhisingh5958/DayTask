@@ -8,13 +8,14 @@ Cause:
 
 Fix:
 
-- Run with both dart-define values:
+- Create `.env` from `.env.example`, set both values, then run with `--dart-define-from-file`:
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=YOUR_SUPABASE_URL \
-  --dart-define=SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+cp .env.example .env
+flutter run --dart-define-from-file=.env
 ```
+
+- Alternative: pass both `--dart-define` values directly.
 
 ## Login or Signup Fails
 

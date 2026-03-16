@@ -30,7 +30,10 @@ class TaskService {
   }) async {
     await SupabaseService.client
         .from('tasks')
-        .update({'is_completed': isCompleted})
+        .update({
+          'is_completed': isCompleted,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', id);
   }
 }

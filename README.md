@@ -51,12 +51,15 @@ lib/
 2. Create a `tasks` table:
 
 ```sql
+create extension if not exists pgcrypto;
+
 create table if not exists public.tasks (
 	id uuid primary key default gen_random_uuid(),
 	user_id uuid not null references auth.users(id) on delete cascade,
 	title text not null,
 	is_completed boolean not null default false,
-	created_at timestamptz not null default now()
+	created_at timestamptz not null default now(),
+	updated_at timestamptz not null default now()
 );
 
 alter table public.tasks enable row level security;
@@ -78,7 +81,26 @@ on public.tasks for delete
 using (auth.uid() = user_id);
 ```
 
-3. Run the app with Supabase keys:
+3. Create env file and run the app:
+
+```bash
+cp .env.example .env
+```
+
+Fill `.env`:
+
+```dotenv
+SUPABASE_URL=YOUR_SUPABASE_URL
+SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+Run:
+
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+Alternative (direct flags):
 
 ```bash
 flutter run \

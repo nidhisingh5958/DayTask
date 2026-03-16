@@ -14,12 +14,15 @@ If either value is missing, Supabase is not initialized and the app shows a setu
 Run the following in Supabase SQL editor:
 
 ```sql
+create extension if not exists pgcrypto;
+
 create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null,
   is_completed boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 ```
 
