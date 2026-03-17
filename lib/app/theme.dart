@@ -2,12 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color background = Color(0xFF0F1B2D);
-  static const Color surface = Color(0xFF1A2B40);
-  static const Color surfaceAlt = Color(0xFF253A50);
+  static const Color background = Color(0xFF0A1524);
+  static const Color surface = Color(0xFF18283C);
+  static const Color surfaceAlt = Color(0xFF233A52);
   static const Color accent = Color(0xFFF4C95D);
   static const Color textPrimary = Color(0xFFF5F7FB);
   static const Color textMuted = Color(0xFF9CB0C3);
+
+  static const LinearGradient screenGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF1A2A3F), Color(0xFF18263A)],
+  );
+
+  static BoxDecoration screenBackgroundDecoration() {
+    return const BoxDecoration(gradient: screenGradient);
+  }
+
+  static BoxDecoration panelDecoration({Color? color}) {
+    final panelColor = color ?? const Color(0xFF20384D);
+    return BoxDecoration(
+      color: panelColor,
+      borderRadius: BorderRadius.circular(2),
+    );
+  }
 
   static ThemeData darkTheme() {
     final base = ThemeData.dark(useMaterial3: true);
@@ -28,15 +46,15 @@ class AppTheme {
         filled: true,
         fillColor: surfaceAlt,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(2),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(2),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(2),
           borderSide: const BorderSide(color: accent, width: 1.5),
         ),
         hintStyle: const TextStyle(color: textMuted),
@@ -46,10 +64,9 @@ class AppTheme {
           backgroundColor: accent,
           foregroundColor: const Color(0xFF171B21),
           minimumSize: const Size.fromHeight(50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          elevation: 0,
         ),
       ),
       cardTheme: CardThemeData(

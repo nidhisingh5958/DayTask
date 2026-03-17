@@ -28,6 +28,13 @@ class _DayTaskAppState extends State<DayTaskApp> {
       title: 'DayTask',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme(),
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(textScaler: const TextScaler.linear(0.95)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: AnimatedSwitcher(
         duration: const Duration(milliseconds: 320),
         switchInCurve: Curves.easeOut,

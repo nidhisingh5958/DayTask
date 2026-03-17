@@ -1,213 +1,169 @@
 import 'package:daytask_app/app/theme.dart';
+import 'package:daytask_app/app/text_theme.dart';
 import 'package:daytask_app/auth/auth_controller.dart';
+import 'package:daytask_app/dashboard/communication_controller.dart';
+import 'package:daytask_app/dashboard/communication_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-class MessagesScreen extends StatefulWidget {
+class MessagesScreen extends ConsumerStatefulWidget {
   const MessagesScreen({super.key});
 
   @override
-  State<MessagesScreen> createState() => _MessagesScreenState();
+  ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _MessagesScreenState extends State<MessagesScreen> {
+class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   bool _showGroups = false;
-
-  static const _chatItems = <_MessageItem>[
-    _MessageItem(
-      'Olivia Anna',
-      'Hi, please check the last task, that I....',
-      '31 min',
-    ),
-    _MessageItem(
-      'Emna',
-      'Hi, please check the last task, that I....',
-      '43 min',
-    ),
-    _MessageItem(
-      'Robert Brown',
-      'Hi, please check the last task, that I....',
-      '6 Nov',
-    ),
-    _MessageItem(
-      'James',
-      'Hi, please check the last task, that I....',
-      '8 Dec',
-    ),
-    _MessageItem(
-      'Sophia',
-      'Hi, please check the last task, that I....',
-      '27 Dec',
-    ),
-    _MessageItem(
-      'Isabella',
-      'Hi, please check the last task, that I....',
-      '31 min',
-    ),
-  ];
-
-  static const _groupItems = <_MessageItem>[
-    _MessageItem(
-      'Android Developer',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'iOS Developer',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'Web Developer',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'Back-End Team',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'Front-End Team',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'Personal Project',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-    _MessageItem(
-      'School System Project',
-      'Robert: Did you check the last task?',
-      '15:35',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final active = _showGroups ? _groupItems : _chatItems;
+    final threadsAsync = ref.watch(chatThreadsProvider);
 
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _TopBar(title: 'Messages', showBack: false),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SegmentButton(
-                        label: 'Chat',
-                        selected: !_showGroups,
-                        onTap: () => setState(() => _showGroups = false),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _SegmentButton(
-                        label: 'Groups',
-                        selected: _showGroups,
-                        onTap: () => setState(() => _showGroups = true),
-                      ),
-                    ),
-                  ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _TopBar(title: 'Messages', trailingIcon: Icons.edit_outlined),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SegmentButton(
+                  label: 'Chat',
+                  selected: !_showGroups,
+                  onTap: () => setState(() => _showGroups = false),
                 ),
-                const SizedBox(height: 16),
-                for (final item in active)
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SegmentButton(
+                  label: 'Groups',
+                  selected: _showGroups,
+                  onTap: () => setState(() => _showGroups = true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...threadsAsync.when(
+            loading: () => const [
+              Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+            error: (error, _) => [
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Failed to load chats: $error'),
+              ),
+            ],
+            data: (threads) {
+              final active = threads
+                  .where((thread) => thread.isGroup == _showGroups)
+                  .toList();
+
+              return [
+                for (final thread in active)
                   _MessageRow(
-                    item: item,
+                    item: _MessageItem(
+                      thread.name,
+                      thread.lastMessage,
+                      thread.timeLabel,
+                      thread.initials,
+                      Color(thread.avatarColor),
+                      threadId: thread.id,
+                    ),
                     onTap: () {
                       if (_showGroups) return;
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) =>
-                              ChatConversationScreen(name: item.name),
+                          builder: (_) => ChatConversationScreen(
+                            name: thread.name,
+                            threadId: thread.id,
+                            initials: thread.initials,
+                            avatarColor: Color(thread.avatarColor),
+                          ),
                         ),
                       );
                     },
                   ),
-                if (!_showGroups) ...[
-                  const SizedBox(height: 22),
-                  Center(
-                    child: SizedBox(
-                      width: 160,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const NewMessageScreen(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(44),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        child: const Text('Start chat'),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ];
+            },
           ),
-        ),
-      ],
+          if (!_showGroups) ...[
+            const SizedBox(height: 18),
+            Center(
+              child: SizedBox(
+                width: 140,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NewMessageScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(42),
+                  ),
+                  child: const Text('Start chat'),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
 
-class ChatConversationScreen extends StatelessWidget {
-  const ChatConversationScreen({super.key, required this.name});
+class ChatConversationScreen extends ConsumerWidget {
+  const ChatConversationScreen({
+    super.key,
+    required this.name,
+    this.threadId,
+    this.initials = 'OA',
+    this.avatarColor = const Color(0xFFEAB5B5),
+  });
 
   final String name;
+  final String? threadId;
+  final String initials;
+  final Color avatarColor;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final messagesAsync = threadId == null
+        ? const AsyncValue<List<ChatMessage>>.data(<ChatMessage>[])
+        : ref.watch(chatMessagesProvider(threadId!));
+
     return Scaffold(
-      backgroundColor: const Color(0xFF101C2D),
+      backgroundColor: const Color(0xFF1A2A3F),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+              padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-                  const CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Color(0xFFEAB5B5),
-                    child: Text('OA'),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: avatarColor,
+                    child: Text(initials),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Text(
-                        'Online',
-                        style: TextStyle(
-                          color: Color(0xFFA9BAC8),
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text(name, style: AppTextTheme.chatHeaderName),
+                      Text('Online', style: AppTextTheme.chatHeaderStatus),
                     ],
                   ),
                   const Spacer(),
@@ -218,61 +174,91 @@ class ChatConversationScreen extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 6, 18, 16),
-                child: Column(
-                  children: const [
-                    _Bubble(
-                      text: 'Hi, please check the new task.',
-                      mine: false,
+              child: messagesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) =>
+                    Center(child: Text('Failed to load chat: $error')),
+                data: (messages) {
+                  final messageItems = messages.isEmpty
+                      ? const <ChatMessage>[
+                          ChatMessage(
+                            id: 'fallback-1',
+                            content: 'Hi, please check the new task.',
+                            isMine: false,
+                            isSeen: false,
+                          ),
+                          ChatMessage(
+                            id: 'fallback-2',
+                            content: 'Hi, please check the new task.',
+                            isMine: true,
+                            isSeen: true,
+                          ),
+                          ChatMessage(
+                            id: 'fallback-3',
+                            content: 'Got it. Thanks.',
+                            isMine: false,
+                            isSeen: false,
+                          ),
+                        ]
+                      : messages;
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(18, 6, 18, 16),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < messageItems.length; i++) ...[
+                          _Bubble(
+                            text: messageItems[i].content,
+                            mine: messageItems[i].isMine,
+                            seen: messageItems[i].isSeen,
+                          ),
+                          const SizedBox(height: 10),
+                          if (i == 2) ...[
+                            const _AttachmentStrip(),
+                            const SizedBox(height: 10),
+                          ],
+                        ],
+                      ],
                     ),
-                    SizedBox(height: 10),
-                    _Bubble(
-                      text: 'Hi, please check the new task.',
-                      mine: true,
-                      seen: true,
-                    ),
-                    SizedBox(height: 10),
-                    _Bubble(text: 'Got it. Thanks.', mine: false),
-                    SizedBox(height: 10),
-                    _Bubble(
-                      text:
-                          'Hi, please check the last task, that I have completed.',
-                      mine: false,
-                    ),
-                    SizedBox(height: 10),
-                    _AttachmentStrip(),
-                    SizedBox(height: 10),
-                    _Bubble(
-                      text: 'Got it. Will check it soon.',
-                      mine: true,
-                      seen: true,
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
             Container(
-              color: const Color(0xFF1B2A3B),
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+              color: const Color(0xFF203646),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
               child: Row(
                 children: [
-                  const Icon(Icons.widgets_outlined, color: AppTheme.accent),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Type a message',
-                        border: InputBorder.none,
-                        filled: true,
-                        fillColor: Color(0xFF203646),
+                  Expanded(
+                    child: Container(
+                      height: 44,
+                      color: const Color(0xFF1E3546),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.widgets_outlined, color: AppTheme.accent),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Type a message',
+                              style: AppTextTheme.chatInputHint,
+                            ),
+                          ),
+                          Icon(Icons.send_outlined, color: AppTheme.accent),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  const Icon(Icons.send_outlined, color: AppTheme.accent),
                   const SizedBox(width: 8),
-                  const Icon(Icons.mic_none_outlined, color: AppTheme.accent),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    color: const Color(0xFF1E3546),
+                    child: const Icon(
+                      Icons.mic_none_outlined,
+                      color: AppTheme.accent,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -288,31 +274,37 @@ class NewMessageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const names = <String>[
-      'Amelia',
-      'Alexander',
-      'Avery',
-      'Asher',
-      'Berrett',
-      'Benjamin',
-      'Brayden',
-      'Berrett',
-      'Braxton',
-      'Charlotte',
-      'Camelia',
+    const names = <_MessageItem>[
+      _MessageItem('Amelia', '', '', 'AM', Color(0xFFBCE6CF)),
+      _MessageItem('Alexander', '', '', 'AL', Color(0xFFD7EDF9)),
+      _MessageItem('Avery', '', '', 'AV', Color(0xFFE4E4E4)),
+      _MessageItem('Asher', '', '', 'AS', Color(0xFFEAB5B5)),
+      _MessageItem('Berrett', '', '', 'BE', Color(0xFFBCE6CF)),
+      _MessageItem('Benjamin', '', '', 'BN', Color(0xFFC8BDF0)),
+      _MessageItem('Brayden', '', '', 'BR', Color(0xFFC7D9F1)),
+      _MessageItem('Berrett', '', '', 'BT', Color(0xFFEECBD4)),
+      _MessageItem('Braxton', '', '', 'BX', Color(0xFFE4E4E4)),
+      _MessageItem('Charlotte', '', '', 'CH', Color(0xFFBCE6CF)),
+      _MessageItem('Camelia', '', '', 'CA', Color(0xFFE4E4E4)),
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF101C2D),
+      backgroundColor: const Color(0xFF1A2A3F),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
           child: Column(
             children: [
-              const _TopBar(title: 'New Message'),
+              const _TopBar(title: 'New Message', trailingIcon: Icons.search),
               const SizedBox(height: 14),
               const _MessageRow(
-                item: _MessageItem('Create a group', '', ''),
+                item: _MessageItem(
+                  'Create a group',
+                  '',
+                  '',
+                  'CG',
+                  AppTheme.accent,
+                ),
                 icon: Icons.groups_2_outlined,
               ),
               const SizedBox(height: 8),
@@ -340,7 +332,7 @@ class NewMessageScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                        _MessageRow(item: _MessageItem(names[index], '', '')),
+                        _MessageRow(item: names[index]),
                       ],
                     );
                   },
@@ -374,29 +366,29 @@ class ScheduleScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _TopBar(title: 'Schedule', showBack: false),
+          const _TopBar(
+            title: 'Schedule',
+            trailingIcon: Icons.add_box_outlined,
+          ),
           const SizedBox(height: 14),
           const Text(
             'November',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 26,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 58,
+            height: 64,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 final selected = index == 3;
                 return Container(
-                  width: 38,
-                  decoration: BoxDecoration(
-                    color: selected ? AppTheme.accent : const Color(0xFF1E3546),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  width: 58,
+                  color: selected ? AppTheme.accent : const Color(0xFF1F3646),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -407,9 +399,10 @@ class ScheduleScreen extends StatelessWidget {
                               ? const Color(0xFF152234)
                               : Colors.white,
                           fontWeight: FontWeight.w700,
+                          fontSize: 13,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         weekday[index],
                         style: TextStyle(
@@ -432,7 +425,7 @@ class ScheduleScreen extends StatelessWidget {
             'Today\'s Tasks',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 34,
+              fontSize: 26,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -441,15 +434,32 @@ class ScheduleScreen extends StatelessWidget {
             title: 'User Interviews',
             time: '16:00 - 18:30',
             highlight: true,
+            avatars: 3,
           ),
           const SizedBox(height: 8),
-          const _ScheduleCard(title: 'Wireframe', time: '16:00 - 18:30'),
+          const _ScheduleCard(
+            title: 'Wireframe',
+            time: '16:00 - 18:30',
+            avatars: 3,
+          ),
           const SizedBox(height: 8),
-          const _ScheduleCard(title: 'Icons', time: '16:00 - 18:30'),
+          const _ScheduleCard(
+            title: 'Icons',
+            time: '16:00 - 18:30',
+            avatars: 1,
+          ),
           const SizedBox(height: 8),
-          const _ScheduleCard(title: 'Mockups', time: '16:00 - 18:30'),
+          const _ScheduleCard(
+            title: 'Mockups',
+            time: '16:00 - 18:30',
+            avatars: 3,
+          ),
           const SizedBox(height: 8),
-          const _ScheduleCard(title: 'Testing', time: '16:00 - 18:30'),
+          const _ScheduleCard(
+            title: 'Testing',
+            time: '16:00 - 18:30',
+            avatars: 2,
+          ),
         ],
       ),
     );
@@ -469,7 +479,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _titleController = TextEditingController(text: 'Hi-Fi Wireframe');
   final _detailsController = TextEditingController(
     text:
-        'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s.',
+        'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s,',
   );
 
   @override
@@ -486,7 +496,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _TopBar(title: 'Create New Task', showBack: false),
+          const _TopBar(title: 'Create New Task'),
           const SizedBox(height: 14),
           const _FieldLabel('Task Title'),
           const SizedBox(height: 6),
@@ -500,17 +510,26 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Expanded(child: _TagChip(label: 'Robert')),
+              const Expanded(
+                child: _TagChip(
+                  label: 'Robert',
+                  initials: 'R',
+                  color: Color(0xFFF5D8A5),
+                ),
+              ),
               const SizedBox(width: 6),
-              const Expanded(child: _TagChip(label: 'Sophia')),
+              const Expanded(
+                child: _TagChip(
+                  label: 'Sophia',
+                  initials: 'S',
+                  color: Color(0xFFEAB5B5),
+                ),
+              ),
               const SizedBox(width: 6),
               Container(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(
-                  color: AppTheme.accent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                color: AppTheme.accent,
                 child: const Icon(
                   Icons.add,
                   color: Color(0xFF182537),
@@ -522,8 +541,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
           const SizedBox(height: 12),
           const _FieldLabel('Time & Date'),
           const SizedBox(height: 6),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(
                 child: _MiniInput(icon: Icons.access_time, text: '10:30 AM'),
               ),
@@ -542,7 +561,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               'Add New',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 22,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -557,9 +576,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2),
-              ),
             ),
             child: const Text('Create'),
           ),
@@ -569,81 +585,55 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   }
 }
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _TopBar(title: 'Notifications', showBack: false),
-          SizedBox(height: 14),
-          Text(
-            'New',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w600,
-            ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
+
+    return notificationsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) =>
+          Center(child: Text('Failed to load notifications: $error')),
+      data: (items) {
+        final newItems = items.where((item) => item.isNew).toList();
+        final earlierItems = items.where((item) => !item.isNew).toList();
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _TopBar(title: 'Notifications'),
+              const SizedBox(height: 14),
+              Text('New', style: AppTextTheme.sectionHeading),
+              const SizedBox(height: 8),
+              for (final item in newItems)
+                _NotificationRow(
+                  name: item.name,
+                  action: item.action,
+                  task: item.task,
+                  time: item.time,
+                  initials: item.initials,
+                  color: Color(item.avatarColor),
+                ),
+              const SizedBox(height: 12),
+              Text('Earlier', style: AppTextTheme.sectionHeading),
+              const SizedBox(height: 8),
+              for (final item in earlierItems)
+                _NotificationRow(
+                  name: item.name,
+                  action: item.action,
+                  task: item.task,
+                  time: item.time,
+                  initials: item.initials,
+                  color: Color(item.avatarColor),
+                ),
+            ],
           ),
-          SizedBox(height: 8),
-          _NotificationRow(
-            name: 'Olivia Anna',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-          _NotificationRow(
-            name: 'Robert Brown',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-          _NotificationRow(
-            name: 'Sophia',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-          _NotificationRow(
-            name: 'Anna',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Earlier',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 8),
-          _NotificationRow(
-            name: 'Robert Brown',
-            action: 'marked the task',
-            task: 'Mobile App Design Project as in process',
-            time: '4 hours',
-          ),
-          _NotificationRow(
-            name: 'Sophia',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-          _NotificationRow(
-            name: 'Anna',
-            action: 'left a comment in task',
-            task: 'Mobile App Design Project',
-            time: '31 min',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -653,122 +643,118 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-      child: Column(
-        children: [
-          const _TopBar(title: 'Profile', showBack: false),
-          const SizedBox(height: 18),
-          Stack(
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A2A3F),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+          child: Column(
             children: [
-              Container(
-                width: 108,
-                height: 108,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.accent, width: 2),
-                ),
-                child: const CircleAvatar(
-                  backgroundColor: Color(0xFFB7E7C5),
-                  child: Text(
-                    'FL',
-                    style: TextStyle(fontSize: 28, color: Color(0xFF1C2A3C)),
+              const _TopBar(title: 'Profile'),
+              const SizedBox(height: 18),
+              Stack(
+                children: [
+                  Container(
+                    width: 108,
+                    height: 108,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.accent, width: 2),
+                    ),
+                    child: const CircleAvatar(
+                      backgroundColor: Color(0xFFB7E7C5),
+                      child: Text(
+                        'FL',
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Color(0xFF1C2A3C),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    right: 0,
+                    bottom: 6,
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2A3E53),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Positioned(
-                right: 0,
-                bottom: 6,
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2A3E53),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 16),
+              const SizedBox(height: 18),
+              const _ProfileField(
+                icon: Icons.person_outline,
+                value: 'Fazil Laghari',
+              ),
+              const SizedBox(height: 10),
+              const _ProfileField(
+                icon: Icons.email_outlined,
+                value: 'fazzzil7@gmail.com',
+              ),
+              const SizedBox(height: 10),
+              const _ProfileField(icon: Icons.lock_outline, value: 'Password'),
+              const SizedBox(height: 10),
+              const _DropField(label: 'My Tasks'),
+              const SizedBox(height: 10),
+              const _DropField(label: 'Privacy'),
+              const SizedBox(height: 10),
+              const _DropField(label: 'Setting'),
+              const SizedBox(height: 22),
+              ElevatedButton.icon(
+                onPressed: () => ref.read(authServiceProvider).signOut(),
+                icon: const Icon(Icons.logout),
+                label: const Text('Logout'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const _ProfileField(
-            icon: Icons.person_outline,
-            value: 'Fazil Laghari',
-          ),
-          const SizedBox(height: 10),
-          const _ProfileField(
-            icon: Icons.email_outlined,
-            value: 'fazzzil7@gmail.com',
-          ),
-          const SizedBox(height: 10),
-          const _ProfileField(icon: Icons.lock_outline, value: 'Password'),
-          const SizedBox(height: 10),
-          const _DropField(label: 'My Tasks'),
-          const SizedBox(height: 10),
-          const _DropField(label: 'Privacy'),
-          const SizedBox(height: 10),
-          const _DropField(label: 'Setting'),
-          const SizedBox(height: 22),
-          ElevatedButton.icon(
-            onPressed: () => ref.read(authServiceProvider).signOut(),
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.title, this.showBack = true});
+  const _TopBar({required this.title, this.trailingIcon});
 
   final String title;
-  final bool showBack;
+  final IconData? trailingIcon;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (showBack)
-          IconButton(
-            onPressed: () => Navigator.maybePop(context),
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-          )
-        else
-          const SizedBox(width: 40),
+        IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
         Expanded(
           child: Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.montserrat(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextTheme.screenTitle,
           ),
         ),
-        IconButton(
-          onPressed: () {
-            if (title == 'Messages') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const NewMessageScreen(),
+        SizedBox(
+          width: 40,
+          child: trailingIcon == null
+              ? null
+              : IconButton(
+                  onPressed: () {},
+                  icon: Icon(trailingIcon, color: Colors.white),
                 ),
-              );
-            }
-          },
-          icon: Icon(
-            title == 'Messages' ? Icons.edit_outlined : Icons.search,
-            color: Colors.white,
-          ),
         ),
       ],
     );
@@ -788,14 +774,11 @@ class _SegmentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Container(
         height: 40,
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accent : const Color(0xFF1F3646),
-          borderRadius: BorderRadius.circular(2),
-        ),
+        color: selected ? AppTheme.accent : const Color(0xFF1F3646),
         alignment: Alignment.center,
         child: Text(
           label,
@@ -810,11 +793,21 @@ class _SegmentButton extends StatelessWidget {
 }
 
 class _MessageItem {
-  const _MessageItem(this.name, this.subtitle, this.time);
+  const _MessageItem(
+    this.name,
+    this.subtitle,
+    this.time,
+    this.initials,
+    this.color, {
+    this.threadId,
+  });
 
   final String name;
   final String subtitle;
   final String time;
+  final String initials;
+  final Color color;
+  final String? threadId;
 }
 
 class _MessageRow extends StatelessWidget {
@@ -826,13 +819,6 @@ class _MessageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = item.name
-        .trim()
-        .split(' ')
-        .map((w) => w[0])
-        .take(2)
-        .join();
-
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -840,13 +826,11 @@ class _MessageRow extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              radius: 18,
-              backgroundColor: icon == null
-                  ? const Color(0xFFBCE6CF)
-                  : AppTheme.accent,
+              radius: 22,
+              backgroundColor: item.color,
               child: icon == null
                   ? Text(
-                      initials,
+                      item.initials,
                       style: const TextStyle(
                         color: Color(0xFF1C2B3D),
                         fontWeight: FontWeight.w700,
@@ -854,33 +838,24 @@ class _MessageRow extends StatelessWidget {
                     )
                   : Icon(icon, color: const Color(0xFF192638)),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text(item.name, style: AppTextTheme.chatListName),
                   if (item.subtitle.isNotEmpty)
                     Text(
                       item.subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Color(0xFF9FB0BF)),
+                      style: AppTextTheme.chatListSubtitle,
                     ),
                 ],
               ),
             ),
             if (item.time.isNotEmpty)
-              Text(
-                item.time,
-                style: const TextStyle(color: Color(0xFF9FB0BF), fontSize: 11),
-              ),
+              Text(item.time, style: AppTextTheme.chatListTime),
           ],
         ),
       ),
@@ -902,7 +877,7 @@ class _Bubble extends StatelessWidget {
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 280),
+        constraints: const BoxConstraints(maxWidth: 320),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           color: color,
@@ -911,20 +886,11 @@ class _Bubble extends StatelessWidget {
             children: [
               Text(
                 text,
-                style: TextStyle(
-                  color: mine ? const Color(0xFF1A2738) : Colors.white,
-                  fontSize: 15,
-                ),
+                style: mine
+                    ? AppTextTheme.chatBubbleMine
+                    : AppTextTheme.chatBubbleOther,
               ),
-              if (seen)
-                const Text(
-                  'Seen',
-                  style: TextStyle(
-                    color: Color(0xFF1A2738),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              if (seen) Text('Seen', style: AppTextTheme.chatSeen),
             ],
           ),
         ),
@@ -939,20 +905,18 @@ class _AttachmentStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      width: 320,
       color: const Color(0xFF6FA3E8),
-      child: SizedBox(
-        width: 200,
-        child: Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: List.generate(
-            8,
-            (index) => Container(
-              width: 45,
-              height: 45,
-              color: index.isEven ? Colors.white : const Color(0xFFCDD8E1),
-            ),
+      padding: const EdgeInsets.all(3),
+      child: Wrap(
+        spacing: 3,
+        runSpacing: 3,
+        children: List.generate(
+          8,
+          (index) => Container(
+            width: 75,
+            height: 58,
+            color: index.isEven ? Colors.white : const Color(0xFFCDD8E1),
           ),
         ),
       ),
@@ -965,28 +929,23 @@ class _ScheduleCard extends StatelessWidget {
     required this.title,
     required this.time,
     this.highlight = false,
+    required this.avatars,
   });
 
   final String title;
   final String time;
   final bool highlight;
+  final int avatars;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: highlight ? AppTheme.accent : const Color(0xFF1E3546),
-        border: Border(
-          left: BorderSide(
-            width: 6,
-            color: highlight ? AppTheme.accent : AppTheme.accent,
-          ),
-        ),
-      ),
+      height: 72,
+      color: highlight ? AppTheme.accent : const Color(0xFF1F3646),
       child: Row(
         children: [
+          Container(width: 8, color: AppTheme.accent),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -996,7 +955,7 @@ class _ScheduleCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: highlight ? const Color(0xFF1A2738) : Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1006,20 +965,14 @@ class _ScheduleCard extends StatelessWidget {
                     color: highlight
                         ? const Color(0xFF243447)
                         : const Color(0xFFA8BAC8),
-                    fontSize: 13,
+                    fontSize: 10,
                   ),
                 ),
               ],
             ),
           ),
-          const CircleAvatar(
-            radius: 12,
-            backgroundColor: Color(0xFF2A3E53),
-            child: Text(
-              'AL',
-              style: TextStyle(color: AppTheme.accent, fontSize: 9),
-            ),
-          ),
+          _AvatarStack(count: avatars),
+          const SizedBox(width: 10),
         ],
       ),
     );
@@ -1055,6 +1008,7 @@ class _FilledInput extends StatelessWidget {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      style: const TextStyle(fontSize: 12),
       decoration: const InputDecoration(
         filled: true,
         fillColor: Color(0xFF4A6676),
@@ -1065,9 +1019,15 @@ class _FilledInput extends StatelessWidget {
 }
 
 class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label});
+  const _TagChip({
+    required this.label,
+    required this.initials,
+    required this.color,
+  });
 
   final String label;
+  final String initials;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1077,17 +1037,17 @@ class _TagChip extends StatelessWidget {
       color: const Color(0xFF4A6676),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 8,
-            backgroundColor: Color(0xFFF9EFCF),
-            child: Text('R', style: TextStyle(fontSize: 8)),
+            backgroundColor: color,
+            child: Text(initials, style: const TextStyle(fontSize: 8)),
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
           const Icon(Icons.close, color: Colors.white, size: 14),
@@ -1117,7 +1077,7 @@ class _MiniInput extends StatelessWidget {
             child: Icon(icon, color: const Color(0xFF162436), size: 18),
           ),
           const SizedBox(width: 10),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 18)),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ],
       ),
     );
@@ -1130,12 +1090,16 @@ class _NotificationRow extends StatelessWidget {
     required this.action,
     required this.task,
     required this.time,
+    required this.initials,
+    required this.color,
   });
 
   final String name;
   final String action;
   final String task;
   final String time;
+  final String initials;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1144,12 +1108,12 @@ class _NotificationRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: Color(0xFFBCE6CF),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: color,
             child: Text(
-              'RB',
-              style: TextStyle(
+              initials,
+              style: const TextStyle(
                 color: Color(0xFF1F3042),
                 fontWeight: FontWeight.w700,
                 fontSize: 11,
@@ -1160,25 +1124,16 @@ class _NotificationRow extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(color: Color(0xFF9FB0BF), height: 1.25),
+                style: AppTextTheme.notificationBase,
                 children: [
-                  TextSpan(
-                    text: name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  TextSpan(text: name, style: AppTextTheme.notificationName),
                   TextSpan(text: ' $action\n'),
-                  TextSpan(
-                    text: task,
-                    style: const TextStyle(color: AppTheme.accent),
-                  ),
+                  TextSpan(text: task, style: AppTextTheme.notificationTask),
                 ],
               ),
             ),
           ),
-          Text(time, style: const TextStyle(color: Colors.white, fontSize: 11)),
+          Text(time, style: AppTextTheme.notificationTime),
         ],
       ),
     );
@@ -1195,8 +1150,8 @@ class _ProfileField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 46,
-      color: const Color(0xFF4A6676),
       padding: const EdgeInsets.symmetric(horizontal: 12),
+      color: const Color(0xFF4A6676),
       child: Row(
         children: [
           Icon(icon, color: const Color(0xFFACC1CF)),
@@ -1204,7 +1159,7 @@ class _ProfileField extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
           const Icon(Icons.edit_outlined, color: Color(0xFFACC1CF), size: 18),
@@ -1223,8 +1178,8 @@ class _DropField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 46,
-      color: const Color(0xFF4A6676),
       padding: const EdgeInsets.symmetric(horizontal: 12),
+      color: const Color(0xFF4A6676),
       child: Row(
         children: [
           const Icon(
@@ -1236,11 +1191,50 @@ class _DropField extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
           const Icon(Icons.keyboard_arrow_down, color: Color(0xFFACC1CF)),
         ],
+      ),
+    );
+  }
+}
+
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = <Color>[
+      const Color(0xFFF5D8A5),
+      const Color(0xFFC7D9F1),
+      const Color(0xFFEAB5B5),
+    ];
+
+    return SizedBox(
+      width: 16.0 * count + 10,
+      height: 24,
+      child: Stack(
+        children: List.generate(count, (index) {
+          return Positioned(
+            left: index * 14,
+            child: CircleAvatar(
+              radius: 10,
+              backgroundColor: AppTheme.accent,
+              child: CircleAvatar(
+                radius: 9,
+                backgroundColor: colors[index % colors.length],
+                child: const Text(
+                  '•',
+                  style: TextStyle(color: Color(0xFF1A2738), fontSize: 8),
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

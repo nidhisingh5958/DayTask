@@ -22,15 +22,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final taskState = ref.watch(taskControllerProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF101C2D),
-      body: SafeArea(
-        child: taskState.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) =>
-              Center(child: Text('Failed to load tasks: $error')),
-          data: (tasks) => AnimatedSwitcher(
-            duration: const Duration(milliseconds: 240),
-            child: _buildBody(context, tasks),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: AppTheme.screenBackgroundDecoration(),
+        child: SafeArea(
+          child: taskState.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) =>
+                Center(child: Text('Failed to load tasks: $error')),
+            data: (tasks) => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: _buildBody(context, tasks),
+            ),
           ),
         ),
       ),
@@ -144,12 +149,21 @@ class _HomeContent extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: onOpenProfile,
-                    child: const CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Color(0xFF6BA6D9),
-                      child: Text(
-                        'FL',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.accent.withValues(alpha: 0.75),
+                        ),
+                      ),
+                      child: const CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Color(0xFF6BA6D9),
+                        child: Text(
+                          'FL',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ),
@@ -161,9 +175,8 @@ class _HomeContent extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 52,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF455F6E),
-                        borderRadius: BorderRadius.circular(4),
+                      decoration: AppTheme.panelDecoration(
+                        color: const Color(0xFF3A5364),
                       ),
                       alignment: Alignment.center,
                       child: const TextField(
@@ -185,9 +198,8 @@ class _HomeContent extends StatelessWidget {
                   Container(
                     width: 56,
                     height: 52,
-                    decoration: BoxDecoration(
+                    decoration: AppTheme.panelDecoration(
                       color: AppTheme.accent,
-                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Icon(Icons.tune, color: Color(0xFF152132)),
                   ),
@@ -200,11 +212,11 @@ class _HomeContent extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 162,
+                height: 172,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: completed.isEmpty ? 1 : completed.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     if (completed.isEmpty) {
                       return const _EmptyStateCard(
@@ -252,7 +264,7 @@ class _HomeContent extends StatelessWidget {
                 onTap: () => onOpenDetails(task, progress),
               );
             },
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemCount: ongoing.isEmpty ? 1 : ongoing.length,
           ),
         ),
@@ -267,9 +279,7 @@ class _HomeContent extends StatelessWidget {
     final totalDone = allTasks.where((entry) => entry.isCompleted).length;
     final base = totalDone / allTasks.length;
 
-    if (task.isCompleted) {
-      return 1;
-    }
+    if (task.isCompleted) return 1;
 
     return base.clamp(0.15, 0.95);
   }
@@ -288,7 +298,7 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            fontSize: 28,
+            fontSize: 26,
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
@@ -298,8 +308,8 @@ class _SectionHeader extends StatelessWidget {
           subtitle,
           style: const TextStyle(
             color: AppTheme.accent,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -322,18 +332,16 @@ class _CompletedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = highlighted ? AppTheme.accent : const Color(0xFF546E7C);
+    final cardColor = highlighted ? AppTheme.accent : const Color(0xFF4F6877);
     final textColor = highlighted ? const Color(0xFF111B2C) : Colors.white;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 188,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 196,
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(2),
-        ),
+        decoration: AppTheme.panelDecoration(color: cardColor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -373,9 +381,9 @@ class _CompletedCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             LinearProgressIndicator(
-              minHeight: 5,
+              minHeight: 6,
               value: progress,
               backgroundColor: textColor.withValues(alpha: 0.3),
               valueColor: AlwaysStoppedAnimation<Color>(
@@ -409,10 +417,7 @@ class _OngoingTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF435D6D),
-          borderRadius: BorderRadius.circular(2),
-        ),
+        decoration: AppTheme.panelDecoration(color: const Color(0xFF3D5869)),
         child: Row(
           children: [
             Expanded(
@@ -449,8 +454,8 @@ class _OngoingTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             SizedBox(
-              width: 56,
-              height: 56,
+              width: 58,
+              height: 58,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -511,10 +516,7 @@ class _EmptyStateCard extends StatelessWidget {
       width: 220,
       padding: const EdgeInsets.all(18),
       alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: const Color(0xFF435D6D),
-        borderRadius: BorderRadius.circular(2),
-      ),
+      decoration: AppTheme.panelDecoration(color: const Color(0xFF3D5869)),
       child: Text(
         message,
         style: const TextStyle(
@@ -577,9 +579,9 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 88,
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-      decoration: const BoxDecoration(color: Color(0xFF1B2A3B)),
+      height: 76,
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+      decoration: const BoxDecoration(color: Color(0xFF203646)),
       child: Row(
         children: [
           Expanded(
@@ -603,12 +605,9 @@ class _BottomActionBar extends StatelessWidget {
               child: GestureDetector(
                 onTap: onCenterTap,
                 child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                  width: 46,
+                  height: 46,
+                  decoration: const BoxDecoration(color: AppTheme.accent),
                   child: const Icon(
                     Icons.add,
                     color: Color(0xFF111B2C),
@@ -657,22 +656,27 @@ class _BottomItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = selected ? AppTheme.accent : const Color(0xFF7991A3);
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+      borderRadius: BorderRadius.circular(2),
+      child: AnimatedScale(
+        scale: selected ? 1.0 : 0.95,
+        duration: const Duration(milliseconds: 180),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

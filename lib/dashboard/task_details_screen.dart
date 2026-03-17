@@ -18,7 +18,7 @@ class TaskDetailsScreen extends StatelessWidget {
     final dueDate = _formatDueDate(task.createdAt);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF101C2D),
+      backgroundColor: const Color(0xFF1A2A3F),
       body: SafeArea(
         child: Column(
           children: [
@@ -42,7 +42,7 @@ class TaskDetailsScreen extends StatelessWidget {
                           'Task Details',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 26,
+                            fontSize: 22,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -56,86 +56,101 @@ class TaskDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     Text(
                       task.title,
                       style: GoogleFonts.orbitron(
                         color: Colors.white,
-                        fontSize: 32,
+                        fontSize: 24,
                         height: 1.2,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
-                        const _MetaCard(
-                          icon: Icons.calendar_month_outlined,
-                          label: 'Due Date',
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          dueDate,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w600,
+                        const _MetaCard(icon: Icons.calendar_month_outlined),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Due Date',
+                                style: TextStyle(
+                                  color: Color(0xFF8CA7BA),
+                                  fontSize: 10,
+                                ),
+                              ),
+                              Text(
+                                dueDate,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const Spacer(),
-                        const _MetaCard(
-                          icon: Icons.groups_2_outlined,
-                          label: 'Project Team',
+                        const _MetaCard(icon: Icons.groups_2_outlined),
+                        const SizedBox(width: 10),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Project Team',
+                              style: TextStyle(
+                                color: Color(0xFF8CA7BA),
+                                fontSize: 10,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            _AvatarRow(),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    const Align(
-                      alignment: Alignment.centerRight,
-                      child: _AvatarRow(),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
                     const Text(
                       'Project Details',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 32,
+                        fontSize: 22,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
-                      'This task keeps your delivery trackable from requirements to final mocks. Update the checklist below to keep your team aligned and maintain momentum across the sprint.',
+                      'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.74),
-                        fontSize: 17,
-                        height: 1.5,
+                        color: Colors.white.withValues(alpha: 0.76),
+                        fontSize: 12,
+                        height: 1.55,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         const Text(
                           'Project Progress',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 30,
+                            fontSize: 22,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const Spacer(),
                         SizedBox(
-                          width: 62,
-                          height: 62,
+                          width: 74,
+                          height: 74,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               CircularProgressIndicator(
                                 value: progress,
                                 strokeWidth: 3,
-                                backgroundColor: Colors.white.withValues(
-                                  alpha: 0.2,
-                                ),
+                                backgroundColor: const Color(0xFF29465A),
                                 valueColor: const AlwaysStoppedAnimation<Color>(
                                   AppTheme.accent,
                                 ),
@@ -145,6 +160,7 @@ class TaskDetailsScreen extends StatelessWidget {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -152,12 +168,12 @@ class TaskDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
                     const Text(
                       'All Tasks',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 32,
+                        fontSize: 22,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -177,21 +193,18 @@ class TaskDetailsScreen extends StatelessWidget {
             ),
             Container(
               width: double.infinity,
-              color: const Color(0xFF1B2A3B),
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+              color: const Color(0xFF203646),
+              padding: const EdgeInsets.fromLTRB(36, 14, 36, 18),
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.accent,
                   foregroundColor: const Color(0xFF151F30),
-                  minimumSize: const Size.fromHeight(62),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  minimumSize: const Size.fromHeight(52),
                 ),
                 child: const Text(
                   'Add Task',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -223,20 +236,16 @@ class TaskDetailsScreen extends StatelessWidget {
 }
 
 class _MetaCard extends StatelessWidget {
-  const _MetaCard({required this.icon, required this.label});
+  const _MetaCard({required this.icon});
 
   final IconData icon;
-  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 54,
       height: 54,
-      decoration: BoxDecoration(
-        color: AppTheme.accent,
-        borderRadius: BorderRadius.circular(3),
-      ),
+      color: AppTheme.accent,
       child: Icon(icon, color: const Color(0xFF122034)),
     );
   }
@@ -251,28 +260,27 @@ class _ChecklistItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: 58,
       color: const Color(0xFF4A6676),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w500,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
           Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppTheme.accent,
-              border: Border.all(color: const Color(0xFF172538), width: 2),
-            ),
+            width: 58,
+            height: 58,
+            color: AppTheme.accent,
             child: Icon(
               done ? Icons.check_circle_outline : Icons.circle_outlined,
               color: const Color(0xFF172538),
@@ -289,34 +297,26 @@ class _AvatarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = <String>['AL', 'SN', 'JK'];
+    final colors = <Color>[
+      const Color(0xFFF5D8A5),
+      const Color(0xFFC7D9F1),
+      const Color(0xFFEAB5B5),
+    ];
 
     return SizedBox(
-      width: 80,
-      height: 24,
+      width: 60,
+      height: 20,
       child: Stack(
-        children: [
-          for (int i = 0; i < items.length; i++)
-            Positioned(
-              left: i * 18,
-              child: CircleAvatar(
-                radius: 11,
-                backgroundColor: Colors.white,
-                child: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: const Color(0xFF26374B),
-                  child: Text(
-                    items[i],
-                    style: const TextStyle(
-                      color: AppTheme.accent,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
+        children: List.generate(3, (index) {
+          return Positioned(
+            left: index * 14,
+            child: CircleAvatar(
+              radius: 10,
+              backgroundColor: AppTheme.accent,
+              child: CircleAvatar(radius: 9, backgroundColor: colors[index]),
             ),
-        ],
+          );
+        }),
       ),
     );
   }
