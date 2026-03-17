@@ -1,5 +1,6 @@
 import 'package:daytask_app/app/theme.dart';
 import 'package:daytask_app/auth/auth_controller.dart';
+import 'package:daytask_app/auth/forgot_password_screen.dart';
 import 'package:daytask_app/auth/signup_screen.dart';
 import 'package:daytask_app/utils/validators.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
-  String? _errorMessage;
+  bool _googleLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -32,7 +34,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() {
       _loading = true;
-      _errorMessage = null;
     });
 
     try {
@@ -43,12 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
     } catch (error) {
-      setState(() {
-        _errorMessage = error
-            .toString()
-            .replaceFirst('AuthException(message: ', '')
-            .replaceAll(')', '');
-      });
+      if (mounted) _showError(_cleanError(error));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -56,10 +52,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _continueWithGoogle() async {
+    setState(() {
+      _googleLoading = true;
+    });
+
+    try {
+      await ref.read(authServiceProvider).signInWithGoogle();
+    } catch (error) {
+      if (mounted) _showError(_cleanError(error));
+    } finally {
+      if (mounted) {
+        setState(() => _googleLoading = false);
+      }
+    }
+  }
+
+  String _cleanError(Object error) {
+    final raw = error.toString();
+    final match = RegExp(
+      r'message:\s*(.*?)(?:,\s*(?:statusCode|code)|[)]|$)',
+    ).firstMatch(raw);
+    return match?.group(1)?.trim() ?? raw;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  Widget _buildBranding() {
+    return Column(
+      children: const [
+        CircleAvatar(
+          radius: 28,
+          backgroundColor: Color(0x33F4C95D),
+          child: Icon(Icons.watch_later_outlined, color: AppTheme.accent),
+        ),
+        SizedBox(height: 10),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'Day',
+                style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              TextSpan(
+                text: 'Task',
+                style: TextStyle(
+                  color: AppTheme.accent,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final formWidth = width > 600 ? 420.0 : width * 0.9;
+    final formWidth = width > 700 ? 430.0 : width * 0.92;
 
     return Scaffold(
       body: Container(
@@ -84,50 +152,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               constraints: BoxConstraints(maxWidth: formWidth),
               child: Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Center(child: _buildBranding()),
+                        const SizedBox(height: 24),
                         const Text(
-                          'DayTask',
+                          'Welcome Back!',
                           style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 29,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         const Text(
-                          'Welcome back',
+                          'Sign in to continue to your tasks',
                           style: TextStyle(color: AppTheme.textMuted),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
+                        const Text(
+                          'Email Address',
+                          style: TextStyle(color: AppTheme.textMuted),
+                        ),
+                        const SizedBox(height: 8),
                         TextFormField(
                           controller: _emailController,
                           validator: emailValidator,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(
+                            hintText: 'you@example.com',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Password',
+                          style: TextStyle(color: AppTheme.textMuted),
+                        ),
+                        const SizedBox(height: 8),
                         TextFormField(
                           controller: _passwordController,
                           validator: passwordValidator,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Password',
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            hintText: 'Enter password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
+                              },
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ForgotPasswordScreen(
+                                    prefillEmail: _emailController.text,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Forgot Password?'),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (_errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.redAccent),
-                            ),
-                          ),
                         ElevatedButton(
                           onPressed: _loading ? null : _submit,
                           child: _loading
@@ -140,7 +243,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 )
                               : const Text('Log In'),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: const [
+                            Expanded(child: Divider(color: AppTheme.textMuted)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                'Or continue with',
+                                style: TextStyle(color: AppTheme.textMuted),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: AppTheme.textMuted)),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          onPressed: _googleLoading
+                              ? null
+                              : _continueWithGoogle,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            side: const BorderSide(color: Color(0xFF8DA1B4)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: _googleLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.g_mobiledata, size: 26),
+                          label: const Text('Google'),
+                        ),
+                        const SizedBox(height: 8),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
@@ -149,7 +289,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             );
                           },
-                          child: const Text('Create account'),
+                          child: const Text("Don't have an account? Sign Up"),
                         ),
                       ],
                     ),

@@ -42,16 +42,29 @@ class _ConfigMissingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final missing = SupabaseService.missingKeys;
+    final error = SupabaseService.initError;
+
+    final message = StringBuffer(
+      'Supabase is not configured. '
+      'Run with flutter run --dart-define-from-file=.env and include SUPABASE_URL and SUPABASE_ANON_KEY in .env.',
+    );
+
+    if (missing.isNotEmpty) {
+      message.write('\n\nMissing: ${missing.join(', ')}');
+    }
+
+    if (error != null && error.isNotEmpty) {
+      message.write('\n\nInitialization error: $error');
+    }
+
     return Scaffold(
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: const Text(
-              'Supabase is not configured. Run with --dart-define SUPABASE_URL and SUPABASE_ANON_KEY. See README for setup.',
-              textAlign: TextAlign.center,
-            ),
+            child: Text(message.toString(), textAlign: TextAlign.center),
           ),
         ),
       ),

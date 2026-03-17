@@ -1,4 +1,4 @@
-import 'package:daytask_app/app/app_gate.dart';
+import 'package:daytask_app/app/splash_screen.dart';
 import 'package:daytask_app/app/theme.dart';
 import 'package:daytask_app/services/supabase_service.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +20,7 @@ class DayTaskApp extends StatelessWidget {
       title: 'DayTask',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme(),
-      home: const AppGate(),
+      home: const SplashScreen(),
     );
   }
 }
