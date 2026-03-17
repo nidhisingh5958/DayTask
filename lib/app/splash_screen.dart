@@ -1,9 +1,10 @@
-import 'package:daytask_app/app/app_gate.dart';
 import 'package:daytask_app/app/theme.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, required this.onContinue});
+
+  final VoidCallback onContinue;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -34,19 +35,6 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void _continue() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const AppGate(),
-        transitionDuration: const Duration(milliseconds: 320),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
   }
 
   @override
@@ -152,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton.icon(
-                              onPressed: _continue,
+                              onPressed: widget.onContinue,
                               icon: const Icon(Icons.arrow_forward_rounded),
                               label: const Text("Let's Start"),
                             ),
