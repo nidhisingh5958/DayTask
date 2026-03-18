@@ -3,8 +3,14 @@ import 'package:daytask_app/app/text_theme.dart';
 import 'package:daytask_app/auth/auth_controller.dart';
 import 'package:daytask_app/dashboard/communication_controller.dart';
 import 'package:daytask_app/dashboard/communication_model.dart';
+import 'package:daytask_app/dashboard/task_controller.dart';
+import 'package:daytask_app/services/offline_backup_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final offlineBackupServiceProvider = Provider<OfflineBackupService>((ref) {
+  return OfflineBackupService(taskService: ref.watch(taskServiceProvider));
+});
 
 class MessagesScreen extends ConsumerStatefulWidget {
   const MessagesScreen({super.key});
@@ -643,6 +649,65 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Future<void> createBackup() async {
+      final user = ref.read(currentUserProvider);
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in to create a backup.')),
+        );
+        return;
+      }
+
+      try {
+        final tasks = await ref
+            .read(taskServiceProvider)
+            .fetchTasks(userId: user.id);
+        final backupPath = await ref
+            .read(offlineBackupServiceProvider)
+            .createTaskBackup(userId: user.id, tasks: tasks);
+
+        if (!context.mounted) return;
+        final fileName = backupPath.split('/').last;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Offline backup created: $fileName')),
+        );
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Backup failed: $error')));
+      }
+    }
+
+    Future<void> restoreBackup() async {
+      final user = ref.read(currentUserProvider);
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in to restore a backup.')),
+        );
+        return;
+      }
+
+      try {
+        final restoredCount = await ref
+            .read(offlineBackupServiceProvider)
+            .restoreLatestTaskBackup(userId: user.id);
+        await ref.read(taskControllerProvider.notifier).loadTasks();
+
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Restored $restoredCount tasks from offline backup.'),
+          ),
+        );
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Restore failed: $error')));
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A2A3F),
       body: SafeArea(
@@ -709,6 +774,26 @@ class ProfileScreen extends ConsumerWidget {
               const _DropField(label: 'Privacy'),
               const SizedBox(height: 10),
               const _DropField(label: 'Setting'),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: createBackup,
+                icon: const Icon(Icons.backup_outlined),
+                label: const Text('Create Offline Backup'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: restoreBackup,
+                icon: const Icon(Icons.restore_outlined),
+                label: const Text('Restore Latest Backup'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppTheme.accent),
+                  foregroundColor: AppTheme.accent,
+                ),
+              ),
               const SizedBox(height: 22),
               ElevatedButton.icon(
                 onPressed: () => ref.read(authServiceProvider).signOut(),

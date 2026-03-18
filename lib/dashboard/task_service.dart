@@ -49,6 +49,31 @@ class TaskService {
     );
   }
 
+  Future<void> replaceTasksFromBackup({
+    required String userId,
+    required List<Map<String, dynamic>> tasks,
+  }) async {
+    await _withTableFallback((table) async {
+      final query = SupabaseService.client.from(table);
+      await query.delete().eq('user_id', userId);
+
+      if (tasks.isEmpty) {
+        return;
+      }
+
+      for (final batch in _chunk(tasks, 100)) {
+        await query.insert(batch);
+      }
+    });
+  }
+
+  Iterable<List<T>> _chunk<T>(List<T> items, int size) sync* {
+    for (var i = 0; i < items.length; i += size) {
+      final end = (i + size < items.length) ? i + size : items.length;
+      yield items.sublist(i, end);
+    }
+  }
+
   Future<T> _withTableFallback<T>(Future<T> Function(String table) call) async {
     try {
       return await call(_defaultTable);
