@@ -1090,14 +1090,41 @@ class _FilledInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: const TextStyle(fontSize: 12),
-      decoration: const InputDecoration(
-        filled: true,
-        fillColor: Color(0xFF4A6676),
-        border: InputBorder.none,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: AppTheme.surfaceAlt,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF3A5364), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF3A5364), width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AppTheme.accent, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
+        ),
       ),
     );
   }
@@ -1117,25 +1144,47 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      color: const Color(0xFF4A6676),
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: AppTheme.surfaceAlt,
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 8,
+            radius: 10,
             backgroundColor: color,
-            child: Text(initials, style: const TextStyle(fontSize: 8)),
+            child: Text(
+              initials,
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A2B3C),
+              ),
+            ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          const Icon(Icons.close, color: Colors.white, size: 14),
+          const Icon(Icons.close, color: AppTheme.textMuted, size: 16),
         ],
       ),
     );
@@ -1151,18 +1200,45 @@ class _MiniInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
-      color: const Color(0xFF4A6676),
+      height: 46,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: AppTheme.surfaceAlt,
+        border: Border.all(
+          color: AppTheme.accent.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
-            color: AppTheme.accent,
-            child: Icon(icon, color: const Color(0xFF162436), size: 18),
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: AppTheme.accent,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                bottomLeft: Radius.circular(10),
+              ),
+            ),
+            child: Icon(icon, color: const Color(0xFF162436), size: 20),
           ),
-          const SizedBox(width: 10),
-          Text(text, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -1234,20 +1310,42 @@ class _ProfileField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      color: const Color(0xFF4A6676),
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: AppTheme.surfaceAlt,
+        border: Border.all(
+          color: AppTheme.accent.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFFACC1CF)),
-          const SizedBox(width: 8),
+          Icon(icon, color: AppTheme.accent, size: 20),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          const Icon(Icons.edit_outlined, color: Color(0xFFACC1CF), size: 18),
+          Icon(
+            Icons.edit_outlined,
+            color: AppTheme.accent.withValues(alpha: 0.6),
+            size: 18,
+          ),
         ],
       ),
     );
@@ -1262,21 +1360,35 @@ class _DropField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      color: const Color(0xFF4A6676),
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: AppTheme.surfaceAlt,
+        border: Border.all(
+          color: AppTheme.accent.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          const Icon(
-            Icons.settings_outlined,
-            color: Color(0xFFACC1CF),
-            size: 18,
-          ),
-          const SizedBox(width: 8),
+          const Icon(Icons.settings_outlined, color: AppTheme.accent, size: 20),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const Icon(Icons.keyboard_arrow_down, color: Color(0xFFACC1CF)),

@@ -332,7 +332,7 @@ class _CompletedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = highlighted ? AppTheme.accent : const Color(0xFF4F6877);
+    final cardColor = highlighted ? AppTheme.accent : AppTheme.surfaceAlt;
     final textColor = highlighted ? const Color(0xFF111B2C) : Colors.white;
 
     return GestureDetector(
@@ -340,8 +340,24 @@ class _CompletedCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         width: 196,
-        padding: const EdgeInsets.all(14),
-        decoration: AppTheme.panelDecoration(color: cardColor),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: highlighted
+              ? null
+              : Border.all(
+                  color: AppTheme.accent.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -351,7 +367,7 @@ class _CompletedCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.orbitron(
-                  fontSize: 20,
+                  fontSize: 18,
                   height: 1.1,
                   color: textColor,
                   fontWeight: FontWeight.w700,
@@ -360,16 +376,22 @@ class _CompletedCard extends StatelessWidget {
             ),
             Text(
               'Team members',
-              style: TextStyle(color: textColor.withValues(alpha: 0.85)),
+              style: TextStyle(
+                color: textColor.withValues(alpha: 0.85),
+                fontSize: 11,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             const _AvatarRow(),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Text(
                   'Completed',
-                  style: TextStyle(color: textColor.withValues(alpha: 0.92)),
+                  style: TextStyle(
+                    color: textColor.withValues(alpha: 0.92),
+                    fontSize: 12,
+                  ),
                 ),
                 const Spacer(),
                 Text(
@@ -377,19 +399,22 @@ class _CompletedCard extends StatelessWidget {
                   style: TextStyle(
                     color: textColor,
                     fontWeight: FontWeight.w700,
+                    fontSize: 12,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 5),
-            LinearProgressIndicator(
-              minHeight: 6,
-              value: progress,
-              backgroundColor: textColor.withValues(alpha: 0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                highlighted ? const Color(0xFF131C2D) : AppTheme.accent,
-              ),
+            const SizedBox(height: 6),
+            ClipRRect(
               borderRadius: BorderRadius.circular(40),
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: progress,
+                backgroundColor: textColor.withValues(alpha: 0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  highlighted ? const Color(0xFF131C2D) : AppTheme.success,
+                ),
+              ),
             ),
           ],
         ),
@@ -416,8 +441,22 @@ class _OngoingTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: AppTheme.panelDecoration(color: const Color(0xFF3D5869)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppTheme.accent.withValues(alpha: 0.15),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             Expanded(
@@ -429,15 +468,15 @@ class _OngoingTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.orbitron(
-                      fontSize: 18,
+                      fontSize: 16,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   const Text(
                     'Team members',
-                    style: TextStyle(color: Color(0xFFD7DFE7)),
+                    style: TextStyle(color: AppTheme.textMuted, fontSize: 11),
                   ),
                   const SizedBox(height: 6),
                   const _AvatarRow(),
@@ -445,24 +484,36 @@ class _OngoingTile extends StatelessWidget {
                   Text(
                     'Due on : $dueDate',
                     style: const TextStyle(
-                      color: Color(0xFFDEE5EB),
-                      fontSize: 16,
+                      color: AppTheme.accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 58,
-              height: 58,
+            const SizedBox(width: 16),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.surfaceAlt,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 3,
-                    backgroundColor: Colors.white.withValues(alpha: 0.16),
+                    backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       AppTheme.accent,
                     ),
@@ -470,8 +521,8 @@ class _OngoingTile extends StatelessWidget {
                   Text(
                     '${(progress * 100).round()}%',
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                      color: AppTheme.accent,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -514,14 +565,30 @@ class _EmptyStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 220,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       alignment: Alignment.centerLeft,
-      decoration: AppTheme.panelDecoration(color: const Color(0xFF3D5869)),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.accent.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Text(
         message,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppTheme.textPrimary,
           fontWeight: FontWeight.w600,
+          fontSize: 13,
+          height: 1.4,
         ),
       ),
     );
@@ -579,9 +646,24 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 76,
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-      decoration: const BoxDecoration(color: Color(0xFF203646)),
+      height: 80,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: AppTheme.accent.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Expanded(
@@ -605,9 +687,19 @@ class _BottomActionBar extends StatelessWidget {
               child: GestureDetector(
                 onTap: onCenterTap,
                 child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: const BoxDecoration(color: AppTheme.accent),
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.accent.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: const Icon(
                     Icons.add,
                     color: Color(0xFF111B2C),
@@ -654,25 +746,34 @@ class _BottomItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppTheme.accent : const Color(0xFF7991A3);
+    final color = selected ? AppTheme.accent : AppTheme.textMuted;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(12),
       child: AnimatedScale(
-        scale: selected ? 1.0 : 0.95,
-        duration: const Duration(milliseconds: 180),
+        scale: selected ? 1.05 : 0.9,
+        duration: const Duration(milliseconds: 200),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: selected
+                  ? BoxDecoration(
+                      color: AppTheme.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    )
+                  : null,
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
               ),
             ),
           ],

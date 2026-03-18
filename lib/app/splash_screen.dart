@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:daytask_app/app/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
+  Timer? _autoAdvanceTimer;
 
   @override
   void initState() {
@@ -29,11 +32,18 @@ class _SplashScreenState extends State<SplashScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
+
+    _autoAdvanceTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        widget.onContinue();
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _autoAdvanceTimer?.cancel();
     super.dispose();
   }
 
