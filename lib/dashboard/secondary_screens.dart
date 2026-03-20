@@ -649,9 +649,17 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final userEmail = user?.email ?? 'Not set';
+    final userFullName = user?.userMetadata?['full_name'] as String? ?? 'User';
+    final userInitials = userFullName
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .join('');
+
     Future<void> createBackup() async {
-      final user = ref.read(currentUserProvider);
       if (user == null) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign in to create a backup.')),
         );
@@ -680,8 +688,8 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     Future<void> restoreBackup() async {
-      final user = ref.read(currentUserProvider);
       if (user == null) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign in to restore a backup.')),
         );
@@ -708,6 +716,21 @@ class ProfileScreen extends ConsumerWidget {
       }
     }
 
+    Future<void> handleLogout() async {
+      try {
+        await ref.read(authServiceProvider).signOut();
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged out successfully')),
+        );
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Logout failed: $error')));
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A2A3F),
       body: SafeArea(
@@ -726,12 +749,13 @@ class ProfileScreen extends ConsumerWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppTheme.accent, width: 2),
                     ),
-                    child: const CircleAvatar(
-                      backgroundColor: Color(0xFFB7E7C5),
+                    child: CircleAvatar(
+                      backgroundColor: const Color(0xFFB7E7C5),
                       child: Text(
-                        'FL',
-                        style: TextStyle(
-                          fontSize: 28,
+                        userInitials.toUpperCase().padRight(2, 'U'),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFF1C2A3C),
                         ),
                       ),
@@ -748,26 +772,24 @@ class ProfileScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.add,
+                        Icons.edit,
                         color: Colors.white,
-                        size: 16,
+                        size: 14,
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
-              const _ProfileField(
-                icon: Icons.person_outline,
-                value: 'Fazil Laghari',
-              ),
+              _ProfileField(icon: Icons.person_outline, value: userFullName),
+              const SizedBox(height: 10),
+              _ProfileField(icon: Icons.email_outlined, value: userEmail),
               const SizedBox(height: 10),
               const _ProfileField(
-                icon: Icons.email_outlined,
-                value: 'fazzzil7@gmail.com',
+                icon: Icons.lock_outline,
+                value: 'Password',
+                isSecure: true,
               ),
-              const SizedBox(height: 10),
-              const _ProfileField(icon: Icons.lock_outline, value: 'Password'),
               const SizedBox(height: 10),
               const _DropField(label: 'My Tasks'),
               const SizedBox(height: 10),
@@ -796,11 +818,12 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 22),
               ElevatedButton.icon(
-                onPressed: () => ref.read(authServiceProvider).signOut(),
+                onPressed: handleLogout,
                 icon: const Icon(Icons.logout),
                 label: const Text('Logout'),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
+                  backgroundColor: const Color(0xFFDC3545),
                 ),
               ),
             ],
@@ -1302,10 +1325,15 @@ class _NotificationRow extends StatelessWidget {
 }
 
 class _ProfileField extends StatelessWidget {
-  const _ProfileField({required this.icon, required this.value});
+  const _ProfileField({
+    required this.icon,
+    required this.value,
+    this.isSecure = false,
+  });
 
   final IconData icon;
   final String value;
+  final bool isSecure;
 
   @override
   Widget build(BuildContext context) {
@@ -1333,7 +1361,7 @@ class _ProfileField extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              value,
+              isSecure && value.isNotEmpty ? '•' * value.length : value,
               style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontSize: 14,
